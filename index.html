@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ein Maibaum für dich</title>
+
+  <!-- Google Fonts: Pixelify Sans (gut lesbarer Pixelfont), Press Start 2P (für Initialen),
+       Quicksand als Fallback für lange Texte -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&family=Press+Start+2P&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ---------- Reset & Basis ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Pixelify Sans', 'Quicksand', system-ui, sans-serif;
+      color: #3a2f2a;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      line-height: 1.5;
+      /* Pixelart: kein Antialiasing auf SVG/Bildern */
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* SVGs sollen pixelig wirken */
+    svg { shape-rendering: crispEdges; }
+
+    /* ---------- Hintergrund-Layer ---------- */
+    /* z-Index: Himmel(-5) < Sonne(-4) < Wolken(-3) < Pixel-Blütenblätter(-2) < Wiese(-1) < Inhalt(0+) */
+
+    .bg-sky {
+      position: fixed;
+      inset: 0;
+      z-index: -5;
+      /* Stepped Gradient (Pixelart-Stil): klare Bänder statt weicher Verlauf */
+      background:
+        linear-gradient(
+          180deg,
+          #9bd0f5 0%,    #9bd0f5 22%,
+          #b8dcf2 22%,   #b8dcf2 40%,
+          #ffd6e0 40%,   #ffd6e0 60%,
+          #ffe9c9 60%,   #ffe9c9 78%,
+          #ffd9b3 78%,   #ffd9b3 100%
+        );
+      background-size: 100% 220%;
+      animation: skyShift 60s steps(8) infinite alternate;
+    }
+    @keyframes skyShift {
+      0%   { background-position: 0% 0%; }
+      100% { background-position: 0% 25%; }
+    }
+
+    /* Sonne als gestepptes Quadrat-Ensemble */
+    .bg-sun {
+      position: fixed;
+      top: 5vh;
+      right: 6vw;
+      width: 96px;
+      height: 96px;
+      z-index: -4;
+      animation: sunPulse 1.2s steps(2) infinite alternate;
+    }
+    @keyframes sunPulse {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-2px); }
+    }
+
+    /* Pixel-Wolken */
+    .bg-clouds {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .cloud {
+      position: absolute;
+    }
+    .cloud-1 { top:  7vh; animation: drift 90s steps(60) infinite;             animation-delay:  -20s; transform: scale(1);   }
+    .cloud-2 { top: 17vh; animation: drift 130s steps(80) infinite;            animation-delay:  -65s; transform: scale(0.7); opacity: 0.85; }
+    .cloud-3 { top: 28vh; animation: drift 110s steps(70) infinite;            animation-delay:  -95s; transform: scale(1.2); opacity: 0.9; }
+    @keyframes drift {
+      from { transform: translateX(-30vw) scale(var(--s, 1)); }
+      to   { transform: translateX(130vw) scale(var(--s, 1)); }
+    }
+
+    /* Fallende Pixel-Blütenblätter */
+    .bg-petals {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .petal {
+      position: absolute;
+      top: -5vh;
+      width: 8px;
+      height: 8px;
+      animation-name: petalFall;
+      animation-iteration-count: infinite;
+      animation-timing-function: steps(40);
+      box-shadow: 4px 0 0 0 rgba(0, 0, 0, 0); /* leere shadow als Platzhalter */
+    }
+    @keyframes petalFall {
+      0%   { transform: translate3d(0, -10vh, 0); opacity: 0; }
+      8%   { opacity: 0.95; }
+      50%  { transform: translate3d(16px, 50vh, 0); }
+      100% { transform: translate3d(-8px, 110vh, 0); opacity: 0.7; }
+    }
+
+    /* Wiese */
+    .bg-grass {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 22vh;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .bg-grass-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 100%;
+      background:
+        /* helle Pixel-Streifen (heller Schimmer) */
+        repeating-linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.04) 0 6px,
+          transparent 6px 12px
+        ),
+        linear-gradient(
+          180deg,
+          #7ac870 0%,    #7ac870 25%,
+          #5fa856 25%,   #5fa856 60%,
+          #4a8d42 60%,   #4a8d42 100%
+        );
+    }
+    /* Pixelige Oberkante: Treppen-/Zackenleiste oben auf der Wiese */
+    .bg-grass-edge {
+      position: absolute;
+      top: -16px;
+      left: 0;
+      width: 100%;
+      height: 16px;
+      display: block;
+    }
+    .grass-flowers {
+      position: absolute;
+      inset: 0;
+    }
+    .meadow-flower {
+      position: absolute;
+      width: 16px;
+      height: 22px;
+      transform-origin: bottom center;
+      animation: meadowSway 1.6s steps(4) infinite alternate;
+    }
+    @keyframes meadowSway {
+      0%   { transform: translateX(-1px); }
+      100% { transform: translateX(1px); }
+    }
+
+    /* ---------- Hauptcontainer ---------- */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 2.5rem 1rem 26vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* ---------- Typografie (Pixelart) ---------- */
+    .ueberschrift {
+      font-family: 'Press Start 2P', 'Pixelify Sans', monospace;
+      font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+      color: #c2185b;
+      margin: 0 0 1rem;
+      line-height: 1.3;
+      text-shadow:
+        2px 2px 0 #ffffff,
+        4px 4px 0 rgba(194, 24, 91, 0.25);
+      letter-spacing: 1px;
+    }
+    .empfaengerin {
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 700;
+      font-size: clamp(1.6rem, 6vw, 2.2rem);
+      color: #8c1840;
+      margin: 0 0 1.25rem;
+      text-shadow: 2px 2px 0 #ffffff;
+    }
+
+    /* ---------- Maibaum-SVG ---------- */
+    .maibaum {
+      width: 100%;
+      max-width: 360px;
+      height: auto;
+      display: block;
+      margin: 0 auto -2vh;
+    }
+
+    /* Bänder: schwingen leicht in Pixelart-Steps */
+    .band-group {
+      animation: bandSwing 4.5s steps(6) infinite alternate;
+    }
+    .band-hit {
+      cursor: pointer;
+      pointer-events: stroke;
+      touch-action: manipulation;
+    }
+    .band-group:focus-within .band {
+      filter: brightness(1.15);
+    }
+    .band-group:focus { outline: none; }
+    @keyframes bandSwing {
+      0%   { transform: rotate(-2deg); }
+      100% { transform: rotate(2deg);  }
+    }
+
+    /* Herz „atmet" leicht */
+    .heart-group {
+      transform-origin: 160px 250px;
+      animation: heartBeat 1.6s steps(2) infinite alternate;
+    }
+    @keyframes heartBeat {
+      0%   { transform: scale(1); }
+      100% { transform: scale(1.04); }
+    }
+
+    /* Pixel-Blüten an der Krone pulsieren in Steps */
+    .crown-flower {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: flowerPulse 1.8s steps(2) infinite alternate;
+    }
+    @keyframes flowerPulse {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-2px); }
+    }
+
+    /* ---------- Botschaftskarte ---------- */
+    .botschaft-karte {
+      background: #fffaf3;
+      /* Pixelart-Rahmen: harte Kanten, abgesetzter Schatten */
+      border: 3px solid #3a2f2a;
+      border-radius: 0;
+      padding: 1.25rem 1rem 1rem;
+      margin-top: 1.25rem;
+      width: 100%;
+      box-shadow:
+        4px 4px 0 #3a2f2a,
+        8px 8px 0 rgba(58, 47, 42, 0.25);
+      position: relative;
+    }
+    /* Kleine Pixel-„Nieten" in den Ecken */
+    .botschaft-karte::before,
+    .botschaft-karte::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #c2185b;
+      box-shadow: inset -2px -2px 0 rgba(0,0,0,0.25);
+    }
+    .botschaft-karte::before { top: 6px; left: 6px; }
+    .botschaft-karte::after  { top: 6px; right: 6px; }
+    .hauptbotschaft {
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 500;
+      font-size: 1.1rem;
+      color: #3a2f2a;
+      margin: 0.25rem 0 1rem;
+      white-space: pre-line;
+    }
+    .absender {
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #8c1840;
+      margin: 0.5rem 0 0;
+      text-align: right;
+    }
+
+    /* ---------- Overlay ---------- */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(40, 20, 35, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: overlayFade 0.15s steps(3);
+    }
+    .overlay[hidden] { display: none; }
+    @keyframes overlayFade {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .overlay-card {
+      position: relative;
+      background: #fffaf3;
+      border: 3px solid #3a2f2a;
+      border-radius: 0;
+      padding: 2rem 1.25rem 1.25rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow:
+        5px 5px 0 #3a2f2a,
+        10px 10px 0 rgba(58, 47, 42, 0.3);
+      animation: cardPop 0.2s steps(4);
+    }
+    @keyframes cardPop {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+    .overlay-close {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: transparent;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #8c1840;
+      transition: background 0.1s steps(2);
+    }
+    .overlay-close:hover,
+    .overlay-close:focus {
+      background: rgba(140, 24, 64, 0.12);
+      outline: none;
+    }
+    .overlay-media-slot { margin-bottom: 1rem; }
+    .overlay-media-slot:empty { display: none; }
+    .overlay-text {
+      font-family: 'Pixelify Sans', monospace;
+      font-size: 1.05rem;
+      color: #3a2f2a;
+      margin: 0;
+      white-space: pre-line;
+      text-align: center;
+    }
+
+    /* ---------- Ziegen ---------- */
+    .goats-layer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 22vh;
+      z-index: 0; /* über Wiese (-1), unter Inhalt (1) – Ziegen laufen optisch hinter dem Maibaum */
+      pointer-events: none; /* Layer selbst lässt Klicks durch; einzelne Ziegen aktivieren pointer-events */
+      overflow: visible;
+    }
+    .goat {
+      position: absolute;
+      left: 0;
+      pointer-events: auto;
+      cursor: pointer;
+      touch-action: manipulation;
+      padding: 8px;            /* großzügige Trefferfläche (mobile) */
+      will-change: transform;
+    }
+    .goat-sprite-wrap {
+      --dir: 1;                /* 1 = nach rechts, -1 = nach links (gespiegelt) */
+      display: block;
+      transform: scaleX(var(--dir)) translateY(0);
+      transform-origin: center;
+      animation: goatBob 0.4s steps(2) infinite alternate;
+    }
+    .goat.eating .goat-sprite-wrap {
+      animation: goatChew 0.18s steps(2) infinite alternate;
+    }
+    @keyframes goatBob {
+      0%   { transform: scaleX(var(--dir)) translateY(0); }
+      100% { transform: scaleX(var(--dir)) translateY(-2px); }
+    }
+    @keyframes goatChew {
+      0%   { transform: scaleX(var(--dir)) translateY(2px); }
+      100% { transform: scaleX(var(--dir)) translateY(4px); }
+    }
+    .goat-sprite {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    /* Sprechblase */
+    .goat-bubble {
+      position: absolute;
+      bottom: calc(100% - 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fffaf3;
+      border: 2px solid #3a2f2a;
+      padding: 4px 8px;
+      font-family: 'Pixelify Sans', monospace;
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      color: #3a2f2a;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s steps(2);
+      box-shadow: 2px 2px 0 #3a2f2a;
+    }
+    .goat-bubble.visible { opacity: 1; }
+    /* Pixel-Tail unten am Bubble (gestepptes Dreieck) */
+    .goat-bubble::after {
+      content: '';
+      position: absolute;
+      top: calc(100% + 0px);
+      left: 50%;
+      width: 8px;
+      height: 2px;
+      margin-left: -4px;
+      background: #3a2f2a;
+      box-shadow:
+        2px 2px 0 #3a2f2a,
+        -2px 2px 0 #3a2f2a,
+        0 2px 0 #3a2f2a,
+        4px 4px 0 #3a2f2a,
+        -4px 4px 0 #3a2f2a,
+        2px 4px 0 #3a2f2a,
+        -2px 4px 0 #3a2f2a,
+        0 4px 0 #3a2f2a;
+    }
+    .goat-bubble::before {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 4px;
+      height: 2px;
+      margin-left: -2px;
+      background: #fffaf3;
+      box-shadow:
+        0 2px 0 #fffaf3;
+      z-index: 1;
+    }
+
+    /* ---------- Reduzierte Bewegung ---------- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001s !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Hintergrund-Schichten (alle pixelig) -->
+  <div class="bg-sky" aria-hidden="true"></div>
+
+  <!-- Sonne als kleines Pixel-SVG -->
+  <div class="bg-sun" aria-hidden="true">
+    <svg viewBox="0 0 12 12" width="100%" height="100%">
+      <!-- Strahlen (Eckpixel) -->
+      <rect x="2"  y="0"  width="2" height="2" fill="#ffd84a"/>
+      <rect x="8"  y="0"  width="2" height="2" fill="#ffd84a"/>
+      <rect x="0"  y="2"  width="2" height="2" fill="#ffd84a"/>
+      <rect x="10" y="2"  width="2" height="2" fill="#ffd84a"/>
+      <rect x="0"  y="8"  width="2" height="2" fill="#ffd84a"/>
+      <rect x="10" y="8"  width="2" height="2" fill="#ffd84a"/>
+      <rect x="2"  y="10" width="2" height="2" fill="#ffd84a"/>
+      <rect x="8"  y="10" width="2" height="2" fill="#ffd84a"/>
+      <!-- Sonnenkörper (gestepptes Quadrat → Kreis-Anmutung) -->
+      <rect x="3"  y="2"  width="6" height="1" fill="#ffd84a"/>
+      <rect x="2"  y="3"  width="8" height="2" fill="#ffe072"/>
+      <rect x="2"  y="5"  width="8" height="2" fill="#ffd84a"/>
+      <rect x="2"  y="7"  width="8" height="2" fill="#f4b820"/>
+      <rect x="3"  y="9"  width="6" height="1" fill="#f4b820"/>
+      <!-- Highlight -->
+      <rect x="3"  y="3"  width="2" height="1" fill="#fff5b8"/>
+    </svg>
+  </div>
+
+  <!-- Pixel-Wolken: jede Wolke ein eigenes SVG -->
+  <div class="bg-clouds" aria-hidden="true">
+    <div class="cloud cloud-1">
+      <svg viewBox="0 0 16 6" width="160" height="60">
+        <rect x="2"  y="2" width="12" height="2" fill="#ffffff"/>
+        <rect x="4"  y="4" width="10" height="1" fill="#ffffff"/>
+        <rect x="3"  y="1" width="3"  height="1" fill="#ffffff"/>
+        <rect x="7"  y="0" width="4"  height="1" fill="#ffffff"/>
+        <rect x="11" y="1" width="2"  height="1" fill="#ffffff"/>
+        <rect x="2"  y="4" width="2"  height="1" fill="#dbe6ec"/>
+        <rect x="13" y="4" width="2"  height="1" fill="#dbe6ec"/>
+      </svg>
+    </div>
+    <div class="cloud cloud-2">
+      <svg viewBox="0 0 12 5" width="120" height="50">
+        <rect x="1"  y="2" width="10" height="2" fill="#ffffff"/>
+        <rect x="2"  y="1" width="3"  height="1" fill="#ffffff"/>
+        <rect x="6"  y="0" width="4"  height="1" fill="#ffffff"/>
+        <rect x="2"  y="4" width="8"  height="1" fill="#dbe6ec"/>
+      </svg>
+    </div>
+    <div class="cloud cloud-3">
+      <svg viewBox="0 0 18 6" width="180" height="60">
+        <rect x="2"  y="3" width="14" height="2" fill="#ffffff"/>
+        <rect x="3"  y="2" width="3"  height="1" fill="#ffffff"/>
+        <rect x="8"  y="1" width="5"  height="1" fill="#ffffff"/>
+        <rect x="13" y="2" width="3"  height="1" fill="#ffffff"/>
+        <rect x="2"  y="5" width="14" height="1" fill="#dbe6ec"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="bg-petals" id="petalsLayer" aria-hidden="true"></div>
+
+  <div class="bg-grass" aria-hidden="true">
+    <!-- Pixelige Treppenkante als gekachelter SVG-Streifen -->
+    <svg class="bg-grass-edge" viewBox="0 0 24 8" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="grassEdgePattern" x="0" y="0" width="24" height="8" patternUnits="userSpaceOnUse">
+          <rect x="0"  y="4" width="2" height="4" fill="#7ac870"/>
+          <rect x="2"  y="2" width="2" height="6" fill="#7ac870"/>
+          <rect x="4"  y="5" width="2" height="3" fill="#7ac870"/>
+          <rect x="6"  y="3" width="2" height="5" fill="#7ac870"/>
+          <rect x="8"  y="0" width="2" height="8" fill="#7ac870"/>
+          <rect x="10" y="2" width="2" height="6" fill="#7ac870"/>
+          <rect x="12" y="4" width="2" height="4" fill="#7ac870"/>
+          <rect x="14" y="1" width="2" height="7" fill="#7ac870"/>
+          <rect x="16" y="3" width="2" height="5" fill="#7ac870"/>
+          <rect x="18" y="5" width="2" height="3" fill="#7ac870"/>
+          <rect x="20" y="2" width="2" height="6" fill="#7ac870"/>
+          <rect x="22" y="4" width="2" height="4" fill="#7ac870"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grassEdgePattern)"/>
+    </svg>
+    <div class="bg-grass-fill"></div>
+    <div class="grass-flowers" id="grassFlowers"></div>
+  </div>
+  <!-- Pixelart Ziegen -->
+<div class="goats-layer" id="goatsLayer" aria-hidden="true"></div>
+  <!-- Hauptinhalt -->
+  <main class="container">
+    <h1 class="ueberschrift" id="ueberschrift"></h1>
+    <p class="empfaengerin" id="empfaengerin"></p>
+
+    <!-- Pixelart-Maibaum (Birke), viewBox 320×480 -->
+    <svg class="maibaum" viewBox="0 0 320 480" xmlns="http://www.w3.org/2000/svg" aria-label="Maibaum aus Birke mit Bändern und Herz">
+      <!-- =========================================================
+           KRONE — pixelige Birken-Blätterkrone, oval geschichtet
+           ========================================================= -->
+      <g id="krone">
+        <!-- Dunkler Umriss -->
+        <rect x="100" y="0"    width="120" height="15" fill="#2d5d2a"/>
+        <rect x="70"  y="15"   width="180" height="15" fill="#2d5d2a"/>
+        <rect x="55"  y="30"   width="210" height="15" fill="#2d5d2a"/>
+        <rect x="40"  y="45"   width="240" height="30" fill="#2d5d2a"/>
+        <rect x="55"  y="75"   width="210" height="15" fill="#2d5d2a"/>
+        <rect x="70"  y="90"   width="180" height="15" fill="#2d5d2a"/>
+        <rect x="85"  y="105"  width="150" height="15" fill="#2d5d2a"/>
+        <!-- Mittelgrün -->
+        <rect x="115" y="0"    width="90"  height="15" fill="#5fa856"/>
+        <rect x="85"  y="15"   width="150" height="15" fill="#5fa856"/>
+        <rect x="70"  y="30"   width="180" height="15" fill="#5fa856"/>
+        <rect x="55"  y="45"   width="210" height="30" fill="#5fa856"/>
+        <rect x="70"  y="75"   width="180" height="15" fill="#5fa856"/>
+        <rect x="85"  y="90"   width="150" height="15" fill="#5fa856"/>
+        <rect x="100" y="105"  width="120" height="15" fill="#5fa856"/>
+        <!-- Helleres Highlight -->
+        <rect x="130" y="15"   width="60"  height="15" fill="#7ac870"/>
+        <rect x="100" y="30"   width="120" height="30" fill="#7ac870"/>
+        <rect x="115" y="60"   width="90"  height="15" fill="#7ac870"/>
+        <rect x="130" y="75"   width="60"  height="15" fill="#7ac870"/>
+        <!-- Hellster Schimmer -->
+        <rect x="130" y="30"   width="45"  height="15" fill="#a3d99a"/>
+        <rect x="115" y="45"   width="30"  height="15" fill="#a3d99a"/>
+
+        <!-- Bunte Pixel-Blüten in der Krone (pulsieren) -->
+        <rect class="crown-flower" x="80"  y="60" width="10" height="10" fill="#f4a8c0" style="animation-delay: 0s"/>
+        <rect class="crown-flower" x="160" y="20" width="10" height="10" fill="#fff5b8" style="animation-delay: 0.2s"/>
+        <rect class="crown-flower" x="220" y="60" width="10" height="10" fill="#d8a8f4" style="animation-delay: 0.4s"/>
+        <rect class="crown-flower" x="100" y="90" width="10" height="10" fill="#ffd0a8" style="animation-delay: 0.6s"/>
+        <rect class="crown-flower" x="200" y="90" width="10" height="10" fill="#a8d8f4" style="animation-delay: 0.8s"/>
+        <rect class="crown-flower" x="140" y="50" width="10" height="10" fill="#ffffff" style="animation-delay: 1.0s"/>
+      </g>
+
+      <!-- =========================================================
+           BIRKEN-STAMM — weiß mit dunklen Querstreifen
+           ========================================================= -->
+      <g id="stamm">
+        <!-- Stamm-Grundfläche -->
+        <rect x="146" y="120" width="28" height="350" fill="#f5f0e8"/>
+        <!-- Schattenseite rechts -->
+        <rect x="170" y="120" width="4"  height="350" fill="#d0c8bc"/>
+        <!-- Hellerer Streifen links -->
+        <rect x="146" y="120" width="3"  height="350" fill="#ffffff"/>
+        <!-- Birken-„Augen" / Lentizellen -->
+        <rect x="146" y="150" width="28" height="3"  fill="#2a2a2a"/>
+        <rect x="150" y="180" width="14" height="3"  fill="#3a3a3a"/>
+        <rect x="158" y="210" width="16" height="3"  fill="#2a2a2a"/>
+        <rect x="146" y="290" width="22" height="3"  fill="#3a3a3a"/>
+        <rect x="154" y="320" width="12" height="3"  fill="#2a2a2a"/>
+        <rect x="146" y="360" width="28" height="3"  fill="#2a2a2a"/>
+        <rect x="158" y="400" width="14" height="3"  fill="#3a3a3a"/>
+        <rect x="148" y="440" width="20" height="3"  fill="#2a2a2a"/>
+        <!-- Kleine Knubbel/Astansätze -->
+        <rect x="148" y="148" width="3"  height="6"  fill="#1a1a1a"/>
+        <rect x="166" y="358" width="4"  height="6"  fill="#1a1a1a"/>
+      </g>
+
+      <!-- =========================================================
+           BÄNDER — gesteppte Pixel-Pfade vom Stammkopf nach unten
+           Jeweils <g class="band-group"> mit Hit-Path + sichtbarem Path
+           transform-origin per JS am Aufhängepunkt
+           ========================================================= -->
+      <g id="ribbons">
+        <!-- Band 0: links außen -->
+        <g class="band-group" data-band-index="0" data-pivot-x="148" data-pivot-y="120">
+          <path class="band-hit"
+                d="M 148 120 V 160 H 132 V 200 H 116 V 250 H 96 V 310 H 76 V 380 H 56 V 440"
+                stroke="transparent" stroke-width="44" fill="none"
+                stroke-linecap="butt" stroke-linejoin="miter"
+                tabindex="0" role="button" aria-label="Band 1"/>
+          <path class="band"
+                d="M 148 120 V 160 H 132 V 200 H 116 V 250 H 96 V 310 H 76 V 380 H 56 V 440"
+                stroke="#f4a8c0" stroke-width="14" fill="none"
+                stroke-linecap="butt" stroke-linejoin="miter"/>
+        </g>
+        <!-- Band 1: links mitte -->
+        <g class="band-group" data-band-index="1" data-pivot-x="152" data-pivot-y="120">
+          <path class="band-hit"
+                d="M 152 120 V 170 H 142 V 220 H 130 V 280 H 116 V 340 H 100 V 410 H 88 V 460"
+                stroke="transparent" stroke-width="44" fill="none" stroke-linecap="butt"
+                tabindex="0" role="button" aria-label="Band 2"/>
+          <path class="band"
+                d="M 152 120 V 170 H 142 V 220 H 130 V 280 H 116 V 340 H 100 V 410 H 88 V 460"
+                stroke="#a8d8f4" stroke-width="14" fill="none" stroke-linecap="butt"/>
+        </g>
+        <!-- Band 2: links innen -->
+        <g class="band-group" data-band-index="2" data-pivot-x="156" data-pivot-y="120">
+          <path class="band-hit"
+                d="M 156 120 V 180 H 150 V 240 H 142 V 310 H 132 V 390 H 122 V 460"
+                stroke="transparent" stroke-width="44" fill="none" stroke-linecap="butt"
+                tabindex="0" role="button" aria-label="Band 3"/>
+          <path class="band"
+                d="M 156 120 V 180 H 150 V 240 H 142 V 310 H 132 V 390 H 122 V 460"
+                stroke="#f4d8a8" stroke-width="14" fill="none" stroke-linecap="butt"/>
+        </g>
+        <!-- Band 3: rechts innen -->
+        <g class="band-group" data-band-index="3" data-pivot-x="164" data-pivot-y="120">
+          <path class="band-hit"
+                d="M 164 120 V 180 H 170 V 240 H 178 V 310 H 188 V 390 H 198 V 460"
+                stroke="transparent" stroke-width="44" fill="none" stroke-linecap="butt"
+                tabindex="0" role="button" aria-label="Band 4"/>
+          <path class="band"
+                d="M 164 120 V 180 H 170 V 240 H 178 V 310 H 188 V 390 H 198 V 460"
+                stroke="#c0f4a8" stroke-width="14" fill="none" stroke-linecap="butt"/>
+        </g>
+        <!-- Band 4: rechts mitte -->
+        <g class="band-group" data-band-index="4" data-pivot-x="168" data-pivot-y="120">
+          <path class="band-hit"
+                d="M 168 120 V 170 H 178 V 220 H 190 V 280 H 204 V 340 H 220 V 410 H 232 V 460"
+                stroke="transparent" stroke-width="44" fill="none" stroke-linecap="butt"
+                tabindex="0" role="button" aria-label="Band 5"/>
+          <path class="band"
+                d="M 168 120 V 170 H 178 V 220 H 190 V 280 H 204 V 340 H 220 V 410 H 232 V 460"
+                stroke="#d8a8f4" stroke-width="14" fill="none" stroke-linecap="butt"/>
+        </g>
+        <!-- Band 5: rechts außen -->
+        <g class="band-group" data-band-index="5" data-pivot-x="172" data-pivot-y="120">
+          <path class="band-hit"
+                d="M 172 120 V 160 H 188 V 200 H 204 V 250 H 224 V 310 H 244 V 380 H 264 V 440"
+                stroke="transparent" stroke-width="44" fill="none" stroke-linecap="butt"
+                tabindex="0" role="button" aria-label="Band 6"/>
+          <path class="band"
+                d="M 172 120 V 160 H 188 V 200 H 204 V 250 H 224 V 310 H 244 V 380 H 264 V 440"
+                stroke="#f4a8a8" stroke-width="14" fill="none" stroke-linecap="butt"/>
+        </g>
+      </g>
+
+      <!-- =========================================================
+           HERZ in der Mitte des Baums (am Stamm aufgehangen)
+           Wird per JS nur gerendert, wenn config.herzInitialen gesetzt
+           Inhalt: Pixel-Schnur + Pixel-Herz + Initialen-Text
+           ========================================================= -->
+      <g id="herzGroup" class="heart-group" style="display:none">
+        <!-- Pixel-Schnur (kleine braune Quadrate) -->
+        <rect x="158" y="170" width="4" height="4" fill="#5a3a22"/>
+        <rect x="158" y="178" width="4" height="4" fill="#5a3a22"/>
+        <rect x="158" y="186" width="4" height="4" fill="#5a3a22"/>
+        <rect x="158" y="194" width="4" height="4" fill="#5a3a22"/>
+        <rect x="158" y="202" width="4" height="4" fill="#5a3a22"/>
+
+        <!-- Pixel-Herz aus Rechtecken (Aufhängung bei y≈210, Mitte bei x=160)
+             Maßstab: 1 Pixel = 8px, Herz ist 12 Pixel breit (96px) und 11 hoch (88px) -->
+        <!-- Reihe 1 (y=210-218): zwei Spitzen oben -->
+        <rect x="116" y="210" width="16" height="8"  fill="#c2185b"/>
+        <rect x="148" y="210" width="16" height="8"  fill="#c2185b"/>
+        <rect x="180" y="210" width="16" height="8"  fill="#c2185b"/>
+        <!-- Reihe 2 (y=218-226): voll bis fast außen -->
+        <rect x="108" y="218" width="96" height="8"  fill="#c2185b"/>
+        <!-- Reihe 3 (y=226-234) -->
+        <rect x="108" y="226" width="96" height="8"  fill="#e94560"/>
+        <!-- Reihe 4 (y=234-250): Hauptkörper hell -->
+        <rect x="108" y="234" width="96" height="16" fill="#e94560"/>
+        <!-- Reihe 5 (y=250-258) verjüngt -->
+        <rect x="116" y="250" width="80" height="8"  fill="#c2185b"/>
+        <!-- Reihe 6 (y=258-266) -->
+        <rect x="124" y="258" width="64" height="8"  fill="#c2185b"/>
+        <!-- Reihe 7 (y=266-274) -->
+        <rect x="132" y="266" width="48" height="8"  fill="#a01445"/>
+        <!-- Reihe 8 (y=274-282): Spitze -->
+        <rect x="140" y="274" width="32" height="8"  fill="#a01445"/>
+        <!-- Reihe 9 (y=282-290): Tipp -->
+        <rect x="148" y="282" width="16" height="8"  fill="#8a0035"/>
+
+        <!-- Highlight-Pixel oben links -->
+        <rect x="116" y="218" width="8"  height="8"  fill="#ff8aa1"/>
+        <rect x="124" y="226" width="8"  height="8"  fill="#ff8aa1"/>
+        <rect x="124" y="234" width="8"  height="8"  fill="#ff6b85"/>
+
+        <!-- Initialen-Text mittig im Herzen -->
+        <text id="herzInitialenText"
+              x="156" y="248"
+              text-anchor="middle"
+              font-family="'Press Start 2P', monospace"
+              font-size="16"
+              fill="#ffffff"
+              style="paint-order: stroke; stroke: #8a0035; stroke-width: 3px; stroke-linejoin: miter;">
+        </text>
+      </g>
+    </svg>
+
+    <article class="botschaft-karte">
+      <p class="hauptbotschaft" id="hauptbotschaft"></p>
+      <p class="absender" id="absender"></p>
+    </article>
+  </main>
+
+  <!-- Overlay (Bandbotschaft) -->
+  <div class="overlay" id="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="overlayText">
+    <div class="overlay-card">
+      <button class="overlay-close" id="overlayClose" aria-label="Schließen" type="button">X</button>
+      <!-- Media-Slot: aktuell leer. TODO: später Bild/Video, sobald config.baender[i].media gesetzt -->
+      <div class="overlay-media-slot" id="overlayMedia"></div>
+      <p class="overlay-text" id="overlayText"></p>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIG — alle Inhalte hier anpassen
+    // ============================================================
+    // Hinweis: baender-Objekte können später optional ein Feld
+    //   media: { type: "image" | "video", src: "data:image/...;base64,..." }
+    // bekommen. renderMedia() ist als Stub vorbereitet.
+    const config = {
+      empfaengerin: "[Für mein Sonnenschwein]",
+      absender: "[vom Kopfschmerzmacker]",
+      ueberschrift: "[Kitschige Kölsche Traditionen]",
+      hauptbotschaft: "[Ich hoffe du kannst dich mindestens ein bisschen darüber freuen! Der Maibaum hat mich nichts gekostet, außer nerven und macht mir wahrscheinlich mehr Freude als dir. Fühl dich abgeknutscht (nicht zu viel) <3]",
+      // Initialen werden im Pixel-Herz mittig am Baum angezeigt.
+      // Leerer String "" -> Herz wird gar nicht erst gerendert.
+      herzInitialen: "A+L(uca)",
+      baender: [
+       { 
+      farbe: "#f4a8c0", 
+      text: "[Botschaft Band 1]",
+      //media: { type: "image", src: "media/foto1.jpg" } // Pfad zur Bilddatei
+       },
+       { 
+      farbe: "#a8d8f4", 
+      text: "[Botschaft Band 2]",
+      //media: { type: "video", src: "media/video1.mp4" } // Pfad zur Videodatei
+       },
+       { farbe: "#f4d8a8", 
+       text: "[Botschaft Band 3]", 
+       //media: { type: "image" src: "assets/images/imagex.png"}
+        },
+       { farbe: "#c0f4a8", text: "[Botschaft Band 4]" },
+       { farbe: "#d8a8f4", text: "[Botschaft Band 5]" },
+      { farbe: "#f4a8a8", text: "[Botschaft Band 6]" }
+      ]
+    };
+
+    // ============================================================
+    // RENDER-FUNKTIONEN
+    // ============================================================
+
+    function renderTexte() {
+      document.getElementById('ueberschrift').textContent = config.ueberschrift;
+      document.getElementById('empfaengerin').textContent = config.empfaengerin;
+      document.getElementById('hauptbotschaft').textContent = config.hauptbotschaft;
+      document.getElementById('absender').textContent = '— ' + config.absender;
+      document.title = config.ueberschrift + ' · für ' + config.empfaengerin;
+    }
+
+    // Herz mit Initialen am Baum: nur rendern, wenn String nicht leer.
+    function renderHerz() {
+      const group = document.getElementById('herzGroup');
+      const txt   = document.getElementById('herzInitialenText');
+      const value = (config.herzInitialen || '').trim();
+      if (value) {
+        txt.textContent = value;
+        // Schriftgröße automatisch verkleinern, falls Text länger wird (z.B. „LU+JA")
+        const len = value.length;
+        let fontSize = 16;
+        if (len > 3) fontSize = 12;
+        if (len > 5) fontSize = 9;
+        txt.setAttribute('font-size', fontSize);
+        group.style.display = '';
+      } else {
+        group.remove();
+      }
+    }
+
+    function renderBaender() {
+      const groups = document.querySelectorAll('.band-group');
+      groups.forEach((group) => {
+        const i = parseInt(group.dataset.bandIndex, 10);
+        const band = config.baender[i];
+        if (!band) return;
+
+        // Farbe auf den sichtbaren Pfad anwenden
+        const visible = group.querySelector('.band');
+        if (visible) visible.setAttribute('stroke', band.farbe);
+
+        // Aufhängepunkt = transform-origin für das Schwingen
+        const px = group.dataset.pivotX;
+        const py = group.dataset.pivotY;
+        group.style.transformOrigin = px + 'px ' + py + 'px';
+
+        // Versetztes Schwingen: jedes Band bekommt eigene Phase + leicht andere Dauer
+        const delay = (i * -0.6).toFixed(2) + 's';
+        const duration = (4.0 + (i % 3) * 0.7).toFixed(2) + 's';
+        group.style.animationDelay = delay;
+        group.style.animationDuration = duration;
+
+        // Klick + Tastatur auf der Hit-Area
+        const hit = group.querySelector('.band-hit');
+        if (hit) {
+          hit.addEventListener('click', () => openOverlay(i, hit));
+          hit.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openOverlay(i, hit);
+            }
+          });
+        }
+      });
+    }
+
+    function renderFallendeBlueten() {
+      const layer = document.getElementById('petalsLayer');
+      const farben = ['#f4a8c0', '#fff5b8', '#d8a8f4', '#a8d8f4', '#f4d8a8', '#ffffff'];
+      const ANZAHL = 16;
+      for (let i = 0; i < ANZAHL; i++) {
+        const p = document.createElement('div');
+        p.className = 'petal';
+        p.style.left = (Math.random() * 100) + 'vw';
+        p.style.background = farben[i % farben.length];
+        p.style.animationDuration = (12 + Math.random() * 10).toFixed(1) + 's';
+        p.style.animationDelay = (-Math.random() * 22).toFixed(1) + 's';
+        const size = 6 + Math.floor(Math.random() * 3) * 2; // 6,8,10
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        layer.appendChild(p);
+      }
+    }
+
+    function renderWiesenBlumen() {
+      const layer = document.getElementById('grassFlowers');
+      const ANZAHL = 14;
+      const farben = ['#ffffff', '#fff5b8', '#f4a8c0', '#d8a8f4', '#ffd0a8'];
+      for (let i = 0; i < ANZAHL; i++) {
+        const f = document.createElement('div');
+        f.className = 'meadow-flower';
+        f.style.left = (5 + Math.random() * 90) + '%';
+        f.style.bottom = (5 + Math.random() * 70) + '%';
+        f.style.animationDelay = (-Math.random() * 4).toFixed(1) + 's';
+        f.style.animationDuration = (1.2 + Math.random() * 1.5).toFixed(1) + 's';
+        const farbe = farben[Math.floor(Math.random() * farben.length)];
+        // Pixel-Blümchen: Stiel + 4 Blütenblätter + gelbe Mitte
+        f.innerHTML = `
+          <svg viewBox="0 0 8 11" width="100%" height="100%" shape-rendering="crispEdges">
+            <rect x="3" y="6"  width="1" height="5" fill="#3a7a36"/>
+            <rect x="2" y="0"  width="2" height="2" fill="${farbe}"/>
+            <rect x="0" y="2"  width="2" height="2" fill="${farbe}"/>
+            <rect x="4" y="2"  width="2" height="2" fill="${farbe}"/>
+            <rect x="2" y="4"  width="2" height="2" fill="${farbe}"/>
+            <rect x="2" y="2"  width="2" height="2" fill="#ffd84a"/>
+          </svg>
+        `;
+        layer.appendChild(f);
+      }
+    }
+    
+  function renderGoats() {
+   const layer = document.getElementById('goatsLayer');
+    if (!layer) return;
+
+   const goat = document.createElement('div');
+    goat.className = 'goat eating'; 
+    goat.style.left = '20%'; // Position auf der Wiese
+    goat.style.bottom = '5px';
+
+    goat.innerHTML = `
+    <div class="goat-sprite-wrap" style="--dir: 1;">
+      <div class="goat-sprite" style="font-size: 32px; line-height: 1;">🐐</div>
+    </div>
+    <div class="goat-bubble">Mäh!</div>
+   `;
+
+    // Lässt die Sprechblase bei Klick erscheinen
+    goat.addEventListener('click', () => {
+    const bubble = goat.querySelector('.goat-bubble');
+    bubble.classList.toggle('visible');
+    });
+
+   layer.appendChild(goat);
+  }
+
+    // ============================================================
+    // OVERLAY
+    // ============================================================
+    const overlay      = document.getElementById('overlay');
+    const overlayText  = document.getElementById('overlayText');
+    const overlayMedia = document.getElementById('overlayMedia');
+    const overlayClose = document.getElementById('overlayClose');
+    let lastTrigger = null; // Element, das das Overlay geöffnet hat (für Fokus-Restoration)
+
+    function openOverlay(bandIndex, triggerElement) {
+      const band = config.baender[bandIndex];
+      if (!band) return;
+
+      overlayText.textContent = band.text;
+      renderMedia(band, overlayMedia);
+
+      lastTrigger = triggerElement || null;
+      overlay.hidden = false;
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => overlayClose.focus());
+    }
+
+    function closeOverlay() {
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+      overlayMedia.innerHTML = '';
+      if (lastTrigger && typeof lastTrigger.focus === 'function') {
+        lastTrigger.focus();
+      }
+      lastTrigger = null;
+    }
+
+    // Stub für spätere Medien-Anbindung. Aktuell bewusst leer.
+    // Sobald config.baender[i].media gesetzt ist, hier z.B. ein <img>/<video>
+    // mit der Base64-Quelle (band.media.src) in den slot einsetzen.
+    function renderMedia(band, slot) {
+      slot.innerHTML = '';
+      // if (band.media && band.media.src) {
+      //   if (band.media.type === 'video') {
+      //     const v = document.createElement('video');
+      //     v.src = band.media.src;
+      //     v.controls = true;
+      //     v.style.maxWidth = '100%';
+      //     v.style.imageRendering = 'pixelated';
+      //     slot.appendChild(v);
+      //   } else {
+      //     const img = document.createElement('img');
+      //     img.src = band.media.src;
+      //     img.alt = '';
+      //     img.style.maxWidth = '100%';
+      //     img.style.imageRendering = 'pixelated';
+      //     slot.appendChild(img);
+      //   }
+      // }
+    }
+
+    function setupOverlay() {
+      overlayClose.addEventListener('click', closeOverlay);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeOverlay();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !overlay.hidden) closeOverlay();
+      });
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTexte();
+      renderBaender();
+      renderHerz();
+      renderFallendeBlueten();
+      renderWiesenBlumen();
+      setupOverlay();
+      renderGoats();
+    });
+  </script>
+</body>
+</html>
