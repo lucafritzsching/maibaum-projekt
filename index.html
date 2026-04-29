@@ -778,19 +778,25 @@
        { 
       farbe: "#f4a8c0", 
       text: "[Botschaft Band 1]",
-      //media: { type: "image", src: "media/foto1.jpg" } // Pfad zur Bilddatei
+      media: { type: "image", src: "assets/images/image1.jpg" } // Pfad zur Bilddatei
        },
        { 
       farbe: "#a8d8f4", 
       text: "[Botschaft Band 2]",
-      //media: { type: "video", src: "media/video1.mp4" } // Pfad zur Videodatei
+      media: { type: "video", src: "assets/videos/video1.mp4" } // Pfad zur Videodatei
        },
        { farbe: "#f4d8a8", 
        text: "[Botschaft Band 3]", 
-       //media: { type: "image" src: "assets/images/imagex.png"}
+       media: { type: "image", src: "assets/images/image2.jpeg"}
         },
-       { farbe: "#c0f4a8", text: "[Botschaft Band 4]" },
-       { farbe: "#d8a8f4", text: "[Botschaft Band 5]" },
+       { farbe: "#c0f4a8", 
+        text: "[Botschaft Band 4]", 
+        media: { type: "image", src: "assets/images/image3.JPG"}
+       },
+       { farbe: "#d8a8f4", 
+        text: "[Botschaft Band 5]",
+        media: { type: "image", src: "assets/images/image4.jpeg"}
+        },
       { farbe: "#f4a8a8", text: "[Botschaft Band 6]" }
       ]
     };
@@ -964,28 +970,32 @@
       lastTrigger = null;
     }
 
-    // Stub für spätere Medien-Anbindung. Aktuell bewusst leer.
-    // Sobald config.baender[i].media gesetzt ist, hier z.B. ein <img>/<video>
-    // mit der Base64-Quelle (band.media.src) in den slot einsetzen.
     function renderMedia(band, slot) {
-      slot.innerHTML = '';
-      // if (band.media && band.media.src) {
-      //   if (band.media.type === 'video') {
-      //     const v = document.createElement('video');
-      //     v.src = band.media.src;
-      //     v.controls = true;
-      //     v.style.maxWidth = '100%';
-      //     v.style.imageRendering = 'pixelated';
-      //     slot.appendChild(v);
-      //   } else {
-      //     const img = document.createElement('img');
-      //     img.src = band.media.src;
-      //     img.alt = '';
-      //     img.style.maxWidth = '100%';
-      //     img.style.imageRendering = 'pixelated';
-      //     slot.appendChild(img);
-      //   }
-      // }
+      slot.innerHTML = ''; // Vorherigen Inhalt löschen
+  
+      if (band.media && band.media.src) {
+        const isVideo = band.media.type === 'video';
+        const el = document.createElement(isVideo ? 'video' : 'img');
+    
+        // Quelle setzen (der Pfad aus der Config)
+        el.src = band.media.src;
+    
+        // Styling & Attribute
+        el.style.maxWidth = '100%';
+        el.style.display = 'block';
+        el.style.margin = '0 auto 1rem';
+        el.style.border = '2px solid #3a2f2a'; // Pixel-Rahmen für Medien
+        el.style.imageRendering = 'pixelated'; // Falls es kleine Pixel-Gifs sind
+    
+        if (isVideo) {
+        el.controls = true;      // Player-Leiste anzeigen
+        el.playsInline = true;   // Wichtig für iPhones
+        } else {
+        el.alt = "Erinnerung";
+        }
+    
+      slot.appendChild(el);
+      }
     }
 
     function setupOverlay() {
